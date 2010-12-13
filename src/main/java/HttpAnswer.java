@@ -1,3 +1,13 @@
+import com.sun.grizzly.tcp.OutputBuffer;
+import com.sun.grizzly.tcp.Response;
+import com.sun.grizzly.util.buf.ByteChunk;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
 public class HttpAnswer {
     private static final int OK = 200;
     private static final String EMPTY_BODY = "";
@@ -19,32 +29,30 @@ public class HttpAnswer {
         return new HttpAnswer(OK, EMPTY_BODY, "text/html");
     }
 
+    public void writeTo(Response response) throws IOException {
+        response.setStatus(status);
+        response.setContentType(contentType);
+        response.doWrite(bodyAsByteChunk());
+    }
+
+    private ByteChunk bodyAsByteChunk() throws UnsupportedEncodingException {
+        ByteChunk chunk = new ByteChunk(body.length());
+        chunk.setBytes(body.getBytes("UTF-8"), 0, body.length());
+        return chunk;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        HttpAnswer answer = (HttpAnswer) o;
-
-        if (status != answer.status) return false;
-        if (body != null ? !body.equals(answer.body) : answer.body != null) return false;
-
-        return true;
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
     }
 
     @Override
     public int hashCode() {
-        int result = status;
-        result = 31 * result + (body != null ? body.hashCode() : 0);
-        return result;
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 
     @Override
     public String toString() {
-        return String.format("Status: %d, Body: %s",status,body);
-    }
-
-    public String getBody() {
-        return body;
+        return ToStringBuilder.reflectionToString(this);
     }
 }
